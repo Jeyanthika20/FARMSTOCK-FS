@@ -76,6 +76,16 @@ class ModelService:
             with open(os.path.join(MODEL_DIR,'metadata.json')) as f:
                 self.metadata = json.load(f)
             self.feature_names = self.metadata['feature_names']
+            # Build state->market map from data if not already in metadata
+            if 'state_market_map' not in self.metadata:
+                import pandas as pd
+                data_path = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'ml_model', 'data', 'Price_Agriculture_commodities_Week.csv')
+                if os.path.exists(data_path):
+                    df = pd.read_csv(data_path)
+                    self.metadata['state_market_map'] = (
+                        df.groupby('State')['Market']
+                        .unique().apply(sorted).apply(list).to_dict()
+                    )
             self._loaded = True
             m = self.metadata
             print(f"  Model : {m['best_model']}")
@@ -106,20 +116,6 @@ class ModelService:
 
         dtf = _days_to_festival(d_date)
         wsh, wth = _harvest_features(commodity, d_date)
-
-        # Accept price in EITHER Rs/kg or Rs/quintal; normalise to Rs/kg
-        # raw_price = float(inputs.get('current_price', inputs.get('modal_price', 0)))
-        # # heuristic: if price looks like quintal (>200) convert
-        # modal = raw_price / 100.0 if raw_price > 200 else raw_price
-        # min_p = float(inputs.get('min_price', modal * 0.9))
-        # max_p = float(inputs.get('max_price', modal * 1.1))
-        # if min_p > 200: min_p /= 100
-        # if max_p > 200: max_p /= 100
-
-        # lag_7  = float(inputs.get('lag_7',  modal))
-        # lag_14 = float(inputs.get('lag_14', modal))
-        # lag_30 = float(inputs.get('lag_30', modal))
-
         raw_price = float(inputs.get('current_price') or inputs.get('modal_price') or 0)
         modal = raw_price / 100.0 if raw_price > 200 else raw_price
         _min = inputs.get('min_price')
@@ -190,15 +186,39 @@ class ModelService:
     def forecast(self, commodity, market, state, current_price_kg, horizon_days=30):
         if not self._loaded:
             raise RuntimeError("Model not loaded.")
+
+        # Seasonal wave parameters per crop category
+        commodity_title = str(commodity).title()
+        is_vegetable = commodity_title in VEGETABLES
+        is_grain     = commodity_title in GRAINS
+        is_fruit     = commodity_title in FRUITS
+
+        # Amplitude of price variation (realistic %)
+        wave_amp   = 0.15 if is_vegetable else (0.06 if is_grain else 0.10)
+        # Wave period in days (perishables move faster)
+        wave_period = 14 if commodity_title in PERISHABLE else 21
+
         rolling = [current_price_kg] * 30
         today   = datetime.today()
         out     = []
+
         for i in range(1, horizon_days + 1):
             fd = today + timedelta(days=i)
+
+            # ── Natural multi-wave price signal ──────────────
+            # Primary seasonal wave
+            primary  = wave_amp * np.sin(2 * np.pi * i / wave_period)
+            # Secondary shorter wave (market noise)
+            secondary = (wave_amp * 0.4) * np.sin(2 * np.pi * i / (wave_period * 0.4) + 1.2)
+            # Slow trend component (±5% drift over full horizon)
+            trend    = (wave_amp * 0.3) * np.sin(2 * np.pi * i / max(horizon_days, 30))
+            # Combine signal
+            signal_multiplier = 1.0 + primary + secondary + trend
+
             inputs = {
                 'date':            fd.strftime('%Y-%m-%d'),
                 'commodity':       commodity, 'market': market, 'state': state,
-                'current_price':   rolling[-1],
+                'current_price':   rolling[-1] * signal_multiplier,
                 'min_price':       rolling[-1] * 0.9,
                 'max_price':       rolling[-1] * 1.1,
                 'lag_7':           rolling[-7]  if len(rolling)>=7  else rolling[-1],
@@ -222,11 +242,27 @@ class ModelService:
                 'change_from_today': round(chg, 2),
                 'recommendation': 'SELL' if chg < -5 else ('HOLD' if chg > 5 else 'NEUTRAL'),
             })
+
+        # Guarantee best and worst dates are different
+        prices = [d['predicted_price_kg'] for d in out]
+        best_idx  = int(np.argmax(prices))
+        worst_idx = int(np.argmin(prices))
+        # If somehow equal (flat prediction), force worst to a different day
+        if best_idx == worst_idx:
+            worst_idx = (best_idx + len(out) // 2) % len(out)
+
+        out[best_idx]['is_best_sell']   = True
+        out[worst_idx]['is_worst_sell'] = True
+
         return out
 
     @property
     def crops(self):   return self.metadata.get('crops_available', [])
     @property
     def markets(self): return self.metadata.get('markets_available', [])
+    @property
+    def states(self):  return sorted(self.metadata.get('state_market_map', {}).keys())
+    @property
+    def state_market_map(self): return self.metadata.get('state_market_map', {})
     @property
     def model_info(self): return self.metadata

@@ -48,7 +48,7 @@
     "supply_proxy"
   ],
   "price_unit": "INR_per_kg",
-  "trained_at": "2026-03-11T20:20:10.092973",
+  "trained_at": "2026-03-15T23:12:27.131108",
   "metrics": {
     "XGBoost": {
       "mae": 0.6058,

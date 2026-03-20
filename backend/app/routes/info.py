@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Query
 from app.models.schemas import HealthResponse
 
 router = APIRouter()
@@ -23,6 +23,22 @@ def get_crops(request: Request):
 def get_markets(request: Request):
     svc = request.app.state.model_service
     return {"markets": svc.markets, "total": len(svc.markets)}
+
+@router.get("/states")
+def get_states(request: Request):
+    svc = request.app.state.model_service
+    return {"states": svc.states, "total": len(svc.states)}
+
+@router.get("/markets-by-state")
+def get_markets_by_state(request: Request, state: str = Query(..., description="State name")):
+    svc = request.app.state.model_service
+    markets = svc.state_market_map.get(state, [])
+    return {"state": state, "markets": markets, "total": len(markets)}
+
+@router.get("/state-market-map")
+def get_state_market_map(request: Request):
+    svc = request.app.state.model_service
+    return {"state_market_map": svc.state_market_map}
 
 @router.get("/model/info")
 def model_info(request: Request):

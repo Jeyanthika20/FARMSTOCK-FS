@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: 'Lora', Georgia, serif;
+    background: #f2ece0;
+    color: #1a1a1a;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+}
+
+/* Slide animation for language transitions */
+@keyframes slideUp {
+  from { opacity:0; transform: translateY(8px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+.lang-slide { animation: slideUp 0.3s ease; }
+
+/* Pulse for live indicator */
+@keyframes livePulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+.live-dot { animation: livePulse 1.5s ease-in-out infinite; }
+
+/* Card hover — enhanced */
+.farm-card {
+  transition: transform 0.22s cubic-bezier(.4,0,.2,1), box-shadow 0.22s cubic-bezier(.4,0,.2,1);
+}
+.farm-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(26,61,43,0.14);
+}
+
+/* Subtle gradient backgrounds for stat cards */
+.card-gradient-green {
+  background: linear-gradient(135deg, #d1fae5 0%, #ecfdf5 100%);
+}
+.card-gradient-gold {
+  background: linear-gradient(135deg, #fef9c3 0%, #fffbeb 100%);
+}
+.card-gradient-sky {
+  background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%);
+}
+
+/* Risk badge pulse for CRITICAL */
+.badge-critical-pulse {
+  animation: criticalPulse 2s ease-in-out infinite;
+}
+@keyframes criticalPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
+  50%       { box-shadow: 0 0 0 6px rgba(239,68,68,0); }
+}
+
+/* Footer link underline animation */
+.footer-link {
+  position: relative;
+}
+.footer-link::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: #74c69d;
+  transition: width 0.2s ease;
+}
+.footer-link:hover::after {
+  width: 100%;
+}
+
+/* AI analysis streaming text effect */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+.cursor-blink::after {
+  content: '|';
+  animation: blink 1s step-end infinite;
+  margin-left: 1px;
+  color: #40916c;
+}
+
