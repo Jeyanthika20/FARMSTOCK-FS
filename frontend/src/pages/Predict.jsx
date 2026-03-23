@@ -8,8 +8,9 @@ import { useState, useEffect } from 'react'
 import { TrendingUp, TrendingDown, Minus, Loader2, AlertCircle } from 'lucide-react'
 import RiskBadge from '../components/RiskBadge'
 import { predictPrice, getCrops, getStates, getMarketsByState } from '../utils/api'
+import { CROPS_TA_MAP, STATES_TA_MAP, MARKETS_TA_MAP } from '../utils/inputstranslations'
 
-export default function Predict({ tr }) {
+export default function Predict({ tr, lang = 'en' }) {
   const [crops, setCrops]     = useState([])
   const [states, setStates]   = useState([])
   const [markets, setMarkets] = useState([])
@@ -94,7 +95,7 @@ export default function Predict({ tr }) {
     <div className="max-w-5xl mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-8">
-        <p className="font-mono text-xs text-farm-bright uppercase tracking-widest mb-1">ML Prediction</p>
+        <p className="font-mono text-xs text-farm-bright uppercase tracking-widest mb-1">{tr('predict_tagline')}</p>
         <h1 className="font-syne font-bold text-3xl text-farm-deep lang-slide">{tr('predict_title')}</h1>
         <p className="text-gray-500 mt-1 lang-slide">{tr('predict_sub')}</p>
       </div>
@@ -108,16 +109,33 @@ export default function Predict({ tr }) {
               <label className="block font-mono text-xs text-gray-500 uppercase tracking-wider mb-1 lang-slide">
                 {tr('predict_crop')}
               </label>
-              <input
-                list="crop-list"
-                value={form.commodity}
-                onChange={e => set('commodity', e.target.value)}
-                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-farm-bright"
-                placeholder="e.g. Tomato"
-              />
-              <datalist id="crop-list">
-                {crops.map(c => <option key={c} value={c} />)}
-              </datalist>
+              {lang === 'ta' ? (
+                <select
+                  value={form.commodity}
+                  onChange={e => set('commodity', e.target.value)}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-farm-bright bg-white"
+                >
+                  {crops.length > 0
+                    ? crops.map(c => <option key={c} value={c}>{CROPS_TA_MAP[c] || c}</option>)
+                    : ['Tomato','Onion','Potato','Wheat','Rice','Maize','Brinjal','Cabbage',
+                       'Cauliflower','Banana','Mango','Green Chilli','Garlic','Turmeric','Carrot'
+                      ].map(c => <option key={c} value={c}>{CROPS_TA_MAP[c] || c}</option>)
+                  }
+                </select>
+              ) : (
+                <>
+                  <input
+                    list="crop-list"
+                    value={form.commodity}
+                    onChange={e => set('commodity', e.target.value)}
+                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-farm-bright"
+                    placeholder="e.g. Tomato"
+                  />
+                  <datalist id="crop-list">
+                    {crops.map(c => <option key={c} value={c} />)}
+                  </datalist>
+                </>
+              )}
             </div>
 
             {/* State — select this FIRST to filter markets */}
@@ -131,8 +149,8 @@ export default function Predict({ tr }) {
                 className="w-full border border-gray-200 rounded-xl px-4 py-2.5 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-farm-bright bg-white"
               >
                 {states.length > 0
-                  ? states.map(s => <option key={s}>{s}</option>)
-                  : <option value="Tamil Nadu">Tamil Nadu</option>
+                  ? states.map(s => <option key={s} value={s}>{lang === 'ta' ? (STATES_TA_MAP[s] || s) : s}</option>)
+                  : <option value="Tamil Nadu">{lang === 'ta' ? 'தமிழ் நாடு' : 'Tamil Nadu'}</option>
                 }
               </select>
             </div>
@@ -142,10 +160,10 @@ export default function Predict({ tr }) {
               <label className="block font-mono text-xs text-gray-500 uppercase tracking-wider mb-1 lang-slide">
                 {tr('predict_market')}
                 {marketsLoading && (
-                  <span className="ml-2 text-farm-bright normal-case">Loading...</span>
+                  <span className="ml-2 text-farm-bright normal-case">{tr('loading')}</span>
                 )}
                 {!marketsLoading && markets.length > 0 && (
-                  <span className="ml-2 text-gray-400 normal-case font-normal">({markets.length} markets in {form.state})</span>
+                  <span className="ml-2 text-gray-400 normal-case font-normal">({markets.length} {tr('markets_in')} {lang === 'ta' ? (STATES_TA_MAP[form.state] || form.state) : form.state})</span>
                 )}
               </label>
               <select
@@ -155,16 +173,16 @@ export default function Predict({ tr }) {
                 className="w-full border border-gray-200 rounded-xl px-4 py-2.5 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-farm-bright bg-white disabled:opacity-50"
               >
                 {marketsLoading ? (
-                  <option>Loading markets...</option>
+                  <option>{tr('loading_markets')}</option>
                 ) : markets.length === 0 ? (
-                  <option>No markets found for this state</option>
+                  <option>{tr('no_markets')}</option>
                 ) : (
-                  markets.map(m => <option key={m} value={m}>{m}</option>)
+                  markets.map(m => <option key={m} value={m}>{lang === 'ta' ? (MARKETS_TA_MAP[m] || m) : m}</option>)
                 )}
               </select>
               {!marketsLoading && markets.length === 0 && form.state && (
                 <p className="text-xs text-red-500 mt-1 font-mono">
-                  No market data available for {form.state}. Please select a different state.
+                  {tr('no_markets_state')} {lang === 'ta' ? (STATES_TA_MAP[form.state] || form.state) : form.state}. {tr('select_diff_state')}
                 </p>
               )}
             </div>
@@ -186,12 +204,12 @@ export default function Predict({ tr }) {
             {/* Optional prices row */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block font-mono text-xs text-gray-500 mb-1">Min Price (Rs/kg)</label>
+                <label className="block font-mono text-xs text-gray-500 mb-1 lang-slide">{tr('predict_min_price')}</label>
                 <input type="number" value={form.min_price} onChange={e => set('min_price', e.target.value)}
                   className="w-full border border-gray-200 rounded-xl px-3 py-2 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-farm-bright" placeholder="40" />
               </div>
               <div>
-                <label className="block font-mono text-xs text-gray-500 mb-1">Max Price (Rs/kg)</label>
+                <label className="block font-mono text-xs text-gray-500 mb-1 lang-slide">{tr('predict_max_price')}</label>
                 <input type="number" value={form.max_price} onChange={e => set('max_price', e.target.value)}
                   className="w-full border border-gray-200 rounded-xl px-3 py-2 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-farm-bright" placeholder="50" />
               </div>
@@ -201,7 +219,7 @@ export default function Predict({ tr }) {
             <div className="grid grid-cols-3 gap-2">
               {[7,14,30].map(n => (
                 <div key={n}>
-                  <label className="block font-mono text-xs text-gray-500 mb-1">{n}d ago (Rs/kg)</label>
+                  <label className="block font-mono text-xs text-gray-500 mb-1 lang-slide">{tr(`predict_lag_${n}`)}</label>
                   <input type="number" value={form[`lag_${n}`]} onChange={e => set(`lag_${n}`, e.target.value)}
                     className="w-full border border-gray-200 rounded-xl px-3 py-2 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-farm-bright" placeholder="—" />
                 </div>
@@ -309,8 +327,7 @@ export default function Predict({ tr }) {
           <div className="bg-farm-pale/40 rounded-2xl border border-farm-pale flex items-center justify-center p-12">
             <div className="text-center text-farm-mid">
               <TrendingUp size={40} className="mx-auto mb-3 opacity-40" />
-              <p className="font-syne font-semibold">Fill the form to get prediction</p>
-              <p className="font-mono text-sm opacity-60 mt-1">ஃபார்மை நிரப்பி கணிப்பு பெறுங்கள்</p>
+              <p className="font-syne font-semibold">{tr('fill_form_prediction')}</p>
             </div>
           </div>
         )}

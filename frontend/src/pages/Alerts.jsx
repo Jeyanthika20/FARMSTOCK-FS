@@ -82,7 +82,7 @@ export default function Alerts({ tr, lang }) {
       {/* Header */}
       <div className="flex items-start justify-between mb-8 flex-wrap gap-4">
         <div>
-          <p className="font-mono text-xs text-farm-bright uppercase tracking-widest mb-1">WebSocket Live</p>
+          <p className="font-mono text-xs text-farm-bright uppercase tracking-widest mb-1">{tr('alerts_tagline')}</p>
           <h1 className="font-syne font-bold text-3xl text-farm-deep lang-slide">{tr('alerts_title')}</h1>
           <p className="text-gray-500 mt-1 lang-slide">{tr('alerts_sub')}</p>
         </div>

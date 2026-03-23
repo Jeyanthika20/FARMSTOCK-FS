@@ -94,30 +94,8 @@ export async function forecastPrices(data) {
 }
 
 // ── Crop Health ─────────────────────────────────────────────────
-export async function checkCropHealth(data, useAI = false) {
-  const endpoint = useAI ? '/crop-health/ai' : '/crop-health'
-  try {
-    return await callApi(endpoint, 'POST', data)
-  } catch {
-    return {
-      commodity: data.commodity, state: data.state,
-      month: data.month || new Date().getMonth() + 1,
-      season: 'Kharif', overall_risk: 'MEDIUM',
-      plant_advice: 'CAUTION',
-      diseases_to_watch: [{
-        disease: 'General Monitoring [DEMO]',
-        risk_level: 'MEDIUM',
-        description: 'Backend offline. Connect backend with ANTHROPIC_API_KEY for AI analysis.',
-        prevention: 'Maintain field hygiene. Ensure drainage. Use certified seeds.'
-      }],
-      weather_advisory: 'No weather data — general advisory applied.',
-      price_impact: 'MODERATE RISK — Prices may rise 5-15% if disease spreads.',
-      tips: ['Keep field diary', 'Use certified seeds', 'Practice crop rotation'],
-      ai_powered: false,
-      analysis_note: 'Backend offline — connect backend with ANTHROPIC_API_KEY for AI analysis.',
-      _demo: true
-    }
-  }
+export async function checkCropHealth(data) {
+  return await callApi('/crop-health', 'POST', data)
 }
 
 // ── Crops & Markets list ────────────────────────────────────────

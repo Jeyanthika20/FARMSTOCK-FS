@@ -15,6 +15,7 @@ import {
 } from 'recharts'
 import RiskBadge from '../components/RiskBadge'
 import { forecastPrices, getCrops, getStates, getMarketsByState } from '../utils/api'
+import { CROPS_TA_MAP, STATES_TA_MAP, MARKETS_TA_MAP } from '../utils/inputstranslations'
 
 const CustomTooltip = ({ active, payload, label, tr, bestDate, worstDate }) => {
   if (!active || !payload?.length) return null
@@ -28,8 +29,8 @@ const CustomTooltip = ({ active, payload, label, tr, bestDate, worstDate }) => {
                 'bg-farm-deep border-farm-mid text-white'
     }`}>
       <p className="font-bold">{d.date}
-        {isBest  && <span className="ml-2 text-yellow-300">★ BEST SELL</span>}
-        {isWorst && <span className="ml-2 text-red-300">✗ WORST</span>}
+        {isBest  && <span className="ml-2 text-yellow-300">{tr('forecast_best_sell_tooltip')}</span>}
+        {isWorst && <span className="ml-2 text-red-300">{tr('forecast_worst_tooltip')}</span>}
       </p>
       <p className="text-farm-light">{tr('rs')}{d.predicted_price_kg}{tr('kg')}</p>
       <p className={d.change_from_today >= 0 ? 'text-emerald-400' : 'text-red-400'}>
@@ -40,7 +41,7 @@ const CustomTooltip = ({ active, payload, label, tr, bestDate, worstDate }) => {
   )
 }
 
-export default function Forecast({ tr }) {
+export default function Forecast({ tr, lang = 'en' }) {
   const [crops, setCrops]     = useState([])
   const [states, setStates]   = useState([])
   const [markets, setMarkets] = useState([])
@@ -108,7 +109,7 @@ export default function Forecast({ tr }) {
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       <div className="mb-8">
-        <p className="font-mono text-xs text-farm-bright uppercase tracking-widest mb-1">90-Day Forecast</p>
+        <p className="font-mono text-xs text-farm-bright uppercase tracking-widest mb-1">{tr('forecast_tagline')}</p>
         <h1 className="font-syne font-bold text-3xl text-farm-deep lang-slide">{tr('forecast_title')}</h1>
         <p className="text-gray-500 mt-1 lang-slide">{tr('forecast_sub')}</p>
       </div>
@@ -119,9 +120,23 @@ export default function Forecast({ tr }) {
           {/* Crop */}
           <div>
             <label className="block font-mono text-xs text-gray-500 mb-1 lang-slide">{tr('predict_crop')}</label>
-            <input list="fc-crops" value={form.commodity} onChange={e => set('commodity', e.target.value)}
-              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-farm-bright" />
-            <datalist id="fc-crops">{crops.map(c => <option key={c} value={c} />)}</datalist>
+            {lang === 'ta' ? (
+              <select value={form.commodity} onChange={e => set('commodity', e.target.value)}
+                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-farm-bright bg-white">
+                {crops.length > 0
+                  ? crops.map(c => <option key={c} value={c}>{CROPS_TA_MAP[c] || c}</option>)
+                  : ['Tomato','Onion','Potato','Wheat','Rice','Maize','Brinjal','Cabbage',
+                     'Cauliflower','Banana','Mango','Green Chilli','Garlic','Turmeric','Carrot'
+                    ].map(c => <option key={c} value={c}>{CROPS_TA_MAP[c] || c}</option>)
+                }
+              </select>
+            ) : (
+              <>
+                <input list="fc-crops" value={form.commodity} onChange={e => set('commodity', e.target.value)}
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-farm-bright" />
+                <datalist id="fc-crops">{crops.map(c => <option key={c} value={c} />)}</datalist>
+              </>
+            )}
           </div>
 
           {/* State */}
@@ -130,8 +145,8 @@ export default function Forecast({ tr }) {
             <select value={form.state} onChange={e => set('state', e.target.value)}
               className="w-full border border-gray-200 rounded-xl px-3 py-2.5 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-farm-bright bg-white">
               {states.length > 0
-                ? states.map(s => <option key={s}>{s}</option>)
-                : <option value="Tamil Nadu">Tamil Nadu</option>
+                ? states.map(s => <option key={s} value={s}>{lang === 'ta' ? (STATES_TA_MAP[s] || s) : s}</option>)
+                : <option value="Tamil Nadu">{lang === 'ta' ? 'தமிழ் நாடு' : 'Tamil Nadu'}</option>
               }
             </select>
           </div>
@@ -144,9 +159,9 @@ export default function Forecast({ tr }) {
             <select value={form.market} onChange={e => set('market', e.target.value)}
               disabled={marketsLoading || markets.length === 0}
               className="w-full border border-gray-200 rounded-xl px-3 py-2.5 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-farm-bright bg-white disabled:opacity-50">
-              {marketsLoading ? <option>Loading...</option>
-                : markets.length === 0 ? <option>No markets</option>
-                : markets.map(m => <option key={m} value={m}>{m}</option>)}
+              {marketsLoading ? <option>{tr('loading_markets')}</option>
+                : markets.length === 0 ? <option>{lang === 'ta' ? 'சந்தைகள் இல்லை' : 'No markets'}</option>
+                : markets.map(m => <option key={m} value={m}>{lang === 'ta' ? (MARKETS_TA_MAP[m] || m) : m}</option>)}
             </select>
           </div>
 
@@ -162,7 +177,7 @@ export default function Forecast({ tr }) {
             <label className="block font-mono text-xs text-gray-500 mb-1 lang-slide">{tr('forecast_days')}</label>
             <select value={form.horizon_days} onChange={e => set('horizon_days', +e.target.value)}
               className="w-full border border-gray-200 rounded-xl px-3 py-2.5 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-farm-bright bg-white">
-              {[7,14,21,30,45,60,90].map(d => <option key={d} value={d}>{d} days</option>)}
+              {[7,14,21,30,45,60,90].map(d => <option key={d} value={d}>{d} {tr('days_suffix')}</option>)}
             </select>
           </div>
         </div>
@@ -196,7 +211,7 @@ export default function Forecast({ tr }) {
               <p className="font-mono text-xs text-gray-500 mb-1 lang-slide">{tr('forecast_worst')}</p>
               <p className="font-syne font-bold text-farm-deep">{s.worst_sell_date || '—'}</p>
               <p className="font-mono text-xs text-red-600 font-semibold">
-                {s.worst_sell_price_kg ? `${tr('rs')}${s.worst_sell_price_kg}${tr('kg')}` : 'Avoid selling'}
+                {s.worst_sell_price_kg ? `${tr('rs')}${s.worst_sell_price_kg}${tr('kg')}` : tr('forecast_avoid_selling')}
               </p>
             </div>
             {/* Gain */}
@@ -206,7 +221,7 @@ export default function Forecast({ tr }) {
               <p className="font-syne font-bold text-farm-deep">
                 {s.potential_gain_pct > 0 ? '+' : ''}{s.potential_gain_pct}%
               </p>
-              <p className="font-mono text-xs text-gray-400">vs today</p>
+              <p className="font-mono text-xs text-gray-400">{tr('forecast_vs_today')}</p>
             </div>
             {/* Avg */}
             <div className="farm-card rounded-2xl border border-yellow-200 bg-yellow-50 p-4">
@@ -224,8 +239,8 @@ export default function Forecast({ tr }) {
                 {form.commodity} — {form.horizon_days}-Day Price Forecast
               </h3>
               <div className="flex items-center gap-4 font-mono text-xs text-gray-500">
-                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-emerald-400 inline-block"/>Best sell</span>
-                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-red-400 inline-block"/>Avoid</span>
+                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-emerald-400 inline-block"/>{tr('forecast_best_sell_label')}</span>
+                <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-red-400 inline-block"/>{tr('forecast_avoid_label')}</span>
               </div>
             </div>
             <ResponsiveContainer width="100%" height={300}>
@@ -253,13 +268,13 @@ export default function Forecast({ tr }) {
           {/* Day-by-day table (first 14 days) */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-100">
-              <h3 className="font-syne font-bold text-farm-deep">Day-by-Day Forecast (first 14 days)</h3>
+              <h3 className="font-syne font-bold text-farm-deep">{tr('forecast_day_by_day')}</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full font-mono text-sm">
                 <thead className="bg-gray-50">
                   <tr>
-                    {['Day', 'Date', 'Price (Rs/kg)', 'Per Quintal', 'Change', 'Action'].map(h => (
+                    {[tr('forecast_day_label'), tr('forecast_date_label'), tr('forecast_price_label'), tr('forecast_quintal_label'), tr('forecast_change_label'), tr('forecast_action_label')].map(h => (
                       <th key={h} className="text-left px-4 py-3 text-xs text-gray-500 uppercase tracking-wider">{h}</th>
                     ))}
                   </tr>
@@ -277,8 +292,8 @@ export default function Forecast({ tr }) {
                         <td className="px-4 py-3 text-gray-400">D{d.day}</td>
                         <td className="px-4 py-3 text-farm-deep font-medium">
                           {d.date}
-                          {isBest  && <span className="ml-2 text-xs bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full">★ Best</span>}
-                          {isWorst && <span className="ml-2 text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full">✗ Worst</span>}
+                          {isBest  && <span className="ml-2 text-xs bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full">{tr('forecast_best_badge')}</span>}
+                          {isWorst && <span className="ml-2 text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full">{tr('forecast_worst_badge')}</span>}
                         </td>
                         <td className="px-4 py-3 text-farm-deep font-semibold">{tr('rs')}{d.predicted_price_kg}</td>
                         <td className="px-4 py-3 text-gray-500">{tr('rs')}{d.predicted_price_quintal}</td>

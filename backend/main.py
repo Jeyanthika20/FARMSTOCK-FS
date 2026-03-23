@@ -15,6 +15,9 @@ from datetime import datetime
 from app.routes import predict, forecast, info, crop_health, notifications
 from app.services.model_service import ModelService
 from app.services.websocket_manager import ConnectionManager
+from dotenv import load_dotenv
+from pathlib import Path
+load_dotenv(dotenv_path=Path(r"D:\FARMSTOCK\backend\.env"))
 
 manager = ConnectionManager()
 

@@ -4,7 +4,8 @@
  * CHANGES:
  *   - Removed PriceTicker (live scrolling price bar)
  *   - Removed API status banner (removed from Home too)
- *   - Enhanced professional footer with 4-column layout
+ *   - Enhanced professional footer with 3-column layout (Tech Stack removed)
+ *   - Footer is fully bilingual (English + Tamil) based on lang toggle
  */
 import { useState } from 'react'
 import Navbar      from './components/Navbar'
@@ -29,16 +30,23 @@ export default function App() {
     alerts:   <Alerts   tr={tr} lang={lang} />,
   }
 
-  const footerLinks = [
-    { icon: TrendingUp, label: 'Price Predict', page: 'predict' },
-    { icon: BarChart3,  label: 'Forecast',      page: 'forecast' },
-    { icon: Shield,     label: 'Crop Health',   page: 'health' },
-    { icon: Bell,       label: 'Alerts',        page: 'alerts' },
+  const footerFeatureLinks = [
+    { icon: TrendingUp, labelKey: 'nav_predict',  page: 'predict' },
+    { icon: BarChart3,  labelKey: 'nav_forecast', page: 'forecast' },
+    { icon: Shield,     labelKey: 'nav_health',   page: 'health' },
+    { icon: Bell,       labelKey: 'nav_alerts',   page: 'alerts' },
   ]
 
-  const features = [
+  const platformFeatures = lang === 'ta' ? [
+    '224 பயிர்கள் மற்றும் 1,289 சந்தைகள்',
+    'RandomForest ML விலை கணிப்பு',
+    'AI நோய் ஆலோசனை',
+    '90 நாள் விலை முன்னறிவிப்பு',
+    'இருமொழி (ஆங்கிலம் + தமிழ்)',
+    'நேரடி WebSocket எச்சரிக்கைகள்',
+  ] : [
     '224 crops across 1,289 markets',
-    'XGBoost ML price prediction',
+    'RandomForest ML price prediction',
     'AI-powered disease advisory',
     '90-day price forecasting',
     'Bilingual (English + Tamil)',
@@ -53,54 +61,73 @@ export default function App() {
         {pages[page] || pages.home}
       </main>
 
-      {/* ── Enhanced Footer ──────────────────────────────────── */}
+      {/* ── Enhanced Footer (Bilingual, No Tech Stack) ──────────────────────────────────── */}
       <footer className="bg-farm-deep text-white mt-16">
-        {/* Top section */}
-        <div className="max-w-6xl mx-auto px-4 py-12 grid grid-cols-1 md:grid-cols-4 gap-10">
 
-          {/* Brand column */}
+        {/* Top section — 3 columns */}
+        <div className="max-w-6xl mx-auto px-4 py-12 grid grid-cols-1 md:grid-cols-3 gap-10">
+
+          {/* ── Column 1: Brand + Contact ── */}
           <div className="md:col-span-1">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-8 h-8 bg-farm-bright rounded-lg flex items-center justify-center">
                 <Leaf size={16} className="text-white" />
               </div>
-              <span className="font-syne font-extrabold text-xl text-white">FarmStock</span>
+              <span className="font-syne font-extrabold text-xl text-white">
+                {lang === 'ta' ? 'விவசாய பங்கு' : 'FarmStock'}
+              </span>
             </div>
             <p className="font-mono text-xs text-white/60 leading-relaxed mb-2">
-              ML-powered crop price intelligence for Indian farmers.
+              {tr('footer_brand_desc')}
             </p>
-            <p className="font-mono text-xs text-farm-light/70 leading-relaxed">
-              இந்திய விவசாயிகளுக்கான ML விலை அறிவு
-            </p>
-            {/* <div className="mt-4 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 live-dot" />
-              <span className="font-mono text-xs text-emerald-400">v3.0 — Active</span>
-            </div> */}
+            {lang === 'en' && (
+              <p className="font-mono text-xs text-farm-light/70 leading-relaxed">
+                இந்திய விவசாயிகளுக்கான ML விலை அறிவு
+              </p>
+            )}
+            <div className="mt-5 pt-4 border-t border-white/10 space-y-2">
+              <a
+                href="mailto:farmstock@example.com"
+                className="flex items-center gap-2 font-mono text-xs text-white/50 hover:text-farm-light transition-colors"
+              >
+                <Mail size={11} /> farmstock@example.com
+              </a>
+              <a
+                href="tel:+911800000000"
+                className="flex items-center gap-2 font-mono text-xs text-white/50 hover:text-farm-light transition-colors"
+              >
+                <Phone size={11} /> 1800-000-0000 ({lang === 'ta' ? 'உதவி மையம்' : 'Helpline'})
+              </a>
+            </div>
           </div>
 
-          {/* Quick links */}
+          {/* ── Column 2: Features / Quick Links ── */}
           <div>
-            <p className="font-syne font-bold text-white/90 mb-4 text-sm tracking-wide uppercase">Features</p>
+            <p className="font-syne font-bold text-white/90 mb-4 text-sm tracking-wide uppercase">
+              {tr('footer_features')}
+            </p>
             <ul className="space-y-2.5">
-              {footerLinks.map(({ icon: Icon, label, page: pg }) => (
+              {footerFeatureLinks.map(({ icon: Icon, labelKey, page: pg }) => (
                 <li key={pg}>
                   <button
                     onClick={() => setPage(pg)}
                     className="flex items-center gap-2 font-mono text-xs text-white/60 hover:text-farm-light transition-colors group"
                   >
                     <Icon size={12} className="group-hover:text-farm-bright transition-colors" />
-                    {label}
+                    {tr(labelKey)}
                   </button>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Platform features */}
+          {/* ── Column 3: Platform ── */}
           <div>
-            <p className="font-syne font-bold text-white/90 mb-4 text-sm tracking-wide uppercase">Platform</p>
+            <p className="font-syne font-bold text-white/90 mb-4 text-sm tracking-wide uppercase">
+              {tr('footer_platform')}
+            </p>
             <ul className="space-y-2">
-              {features.map(f => (
+              {platformFeatures.map(f => (
                 <li key={f} className="flex items-start gap-2 font-mono text-xs text-white/60">
                   <span className="text-farm-bright mt-0.5">›</span>
                   {f}
@@ -109,34 +136,6 @@ export default function App() {
             </ul>
           </div>
 
-          {/* Tech stack + contact */}
-          <div>
-            <p className="font-syne font-bold text-white/90 mb-4 text-sm tracking-wide uppercase">Tech Stack</p>
-            <div className="space-y-2 mb-6">
-              {[
-                ['Backend',  'FastAPI + XGBoost'],
-                ['Frontend', 'React + Recharts'],
-                ['ML',       'Scikit-learn + Pandas'],
-                ['Realtime', 'WebSocket (ASGI)'],
-                ['Data',     '5 Years Mandi Records'],
-              ].map(([k, v]) => (
-                <div key={k} className="flex items-center justify-between">
-                  <span className="font-mono text-xs text-white/40">{k}</span>
-                  <span className="font-mono text-xs text-farm-light/80">{v}</span>
-                </div>
-              ))}
-            </div>
-            <div className="space-y-2 pt-4 border-t border-white/10">
-              <a href="mailto:farmstock@example.com"
-                className="flex items-center gap-2 font-mono text-xs text-white/50 hover:text-farm-light transition-colors">
-                <Mail size={11} /> farmstock@example.com
-              </a>
-              <a href="tel:+911800000000"
-                className="flex items-center gap-2 font-mono text-xs text-white/50 hover:text-farm-light transition-colors">
-                <Phone size={11} /> 1800-000-0000 (Helpline)
-              </a>
-            </div>
-          </div>
         </div>
 
         {/* Divider */}
@@ -145,12 +144,13 @@ export default function App() {
         {/* Bottom bar */}
         <div className="max-w-6xl mx-auto px-4 py-5 flex flex-col md:flex-row items-center justify-between gap-3">
           <p className="font-mono text-xs text-white/30">
-            © 2025 FarmStock · Built for Indian farmers · Data source: AGMARKNET
+            {tr('footer_copyright')}
           </p>
           <p className="font-mono text-xs text-white/20">
-            Predictions are advisory only — not financial advice.
+            {tr('footer_disclaimer')}
           </p>
         </div>
+
       </footer>
     </div>
   )
